@@ -13,7 +13,7 @@ Agent is thus strongly encouraged.
 
 ## Running
 
-To run as a javaagent [download the jar](https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/0.3.1/jmx_prometheus_javaagent-0.3.1.jar) and run:
+To run as a javaagent [download the jar](https://raw.githubusercontent.com/dinumathai/jmx_exporter/master/jmx_prometheus_javaagent/target/jmx_prometheus_javaagent-0.3.2.jar) and run:
 
 ```
 java -javaagent:./jmx_prometheus_javaagent-0.3.1.jar=8080:config.yaml -jar yourJar.jar
@@ -32,6 +32,8 @@ See `./run_sample_httpserver.sh` for a sample script that runs the httpserver ag
 The configuration is in YAML. An example with all possible options:
 ```yaml
 ---
+jvmLabels:
+    someStaticLabelName: "onlyForJvmMetric"
 startDelaySeconds: 0
 hostPort: 127.0.0.1:1234
 username: 

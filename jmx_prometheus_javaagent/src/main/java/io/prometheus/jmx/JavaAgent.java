@@ -1,12 +1,21 @@
 package io.prometheus.jmx;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.lang.instrument.Instrumentation;
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+
+import org.yaml.snakeyaml.Yaml;
 
 import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.exporter.HTTPServer;
-import io.prometheus.client.hotspot.DefaultExports;
+import io.prometheus.jmx.custom.hotspot.DefaultExports;
 
 public class JavaAgent {
 
@@ -50,7 +59,31 @@ public class JavaAgent {
 
      new BuildInfoCollector().register();
      new JmxCollector(new File(file)).register();
-     DefaultExports.initialize();
+     
+     Map<String, String> globalLabels = getJVMLabels(new File(file));
+	 DefaultExports.initialize(globalLabels);
+     
      server = new HTTPServer(socket, CollectorRegistry.defaultRegistry, true);
    }
+
+   /**
+    * Get the jvmLabels from the config yaml
+    * @param in
+    * @return
+    * @throws FileNotFoundException 
+    */
+	private static Map<String, String> getJVMLabels(File in) throws FileNotFoundException {
+		Map<String, String> globalLabels = new HashMap<String, String>();
+		@SuppressWarnings("unchecked")
+		Map<String, Object> yamlConfig = (Map<String, Object>) new Yaml().load(new FileReader(in));
+		if (yamlConfig.containsKey("jvmLabels")) {
+			@SuppressWarnings("unchecked")
+			TreeMap<String, Object> labels = new TreeMap<String, Object>(
+					(Map<String, Object>) yamlConfig.get("jvmLabels"));
+			for (Map.Entry<String, Object> entry : (Set<Map.Entry<String, Object>>) labels.entrySet()) {
+				globalLabels.put(entry.getKey(), (String) entry.getValue());
+			}
+		}
+		return globalLabels;
+	}
 }
